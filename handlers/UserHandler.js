@@ -1,5 +1,17 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import jsonwebtoken from "jsonwebtoken";
+import dotenv from "dotenv";
+
+const env = dotenv.config().parsed;
+
+// Generate Access TOken
+const generateAccessToken = async (payload) => {
+  return jsonwebtoken.sign(payload, env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: env.JWT_ACCESS_TOKEN_LIFE });
+};
+const generateRefreshToken = async (payload) => {
+  return jsonwebtoken.sign(payload, env.JWT_REFRESH_TOKEN_SECRET, { expiresIn: env.JWT_REFRESH_TOKEN_LIFE });
+};
 
 const register = async (req, res) => {
   try {
@@ -99,7 +111,13 @@ const login = async (req, res) => {
         message: "PASSWORD_WRONG",
       };
     }
+    // Generate TOken
+    const payload = { id: user._id, role: user.role };
 
+    let accessToken = await generateAccessToken(payload);
+    let refreshToken = await generateRefreshToken(payload);
+
+    // RESPONSE SUKSES
     return res.status(200).json({
       status: true,
       message: "LOGIN_SUCCESS",
@@ -107,6 +125,8 @@ const login = async (req, res) => {
         fullname: user.fullname,
         email: user.email,
       },
+      accessToken,
+      refreshToken,
     });
   } catch (err) {
     if (!err.code) {
@@ -119,27 +139,42 @@ const login = async (req, res) => {
     });
   }
 };
-// const getAllCategoryHandler = async (req, res) => {
-//   try {
-//     const categories = await Category.find({ status: "active" });
 
-//     if (!categories) {
-//       throw {
-//         code: 500,
-//         message: "GET_ALL_CATEGORY_FAILED",
-//       };
-//     }
-//     return res.status(200).json({
-//       status: true,
-//       total: categories.length,
-//       categories,
-//     });
-//   } catch (err) {
-//     return res.status(err.code).json({
-//       status: false,
-//       message: err.message,
-//     });
-//   }
-// };
+// VERIFY REFRESH TOKEN
+const refreshToken = async (req, res) => {
+  try {
+    if (!req.body.refreshToken) {
+      throw { code: 428, message: "REFRESH_TOKEN_IS_REQUIRED" };
+    }
+    // VERIFY TOKEN
+    const verify = await jsonwebtoken.verify(req.body.refreshToken, env.JWT_REFRESH_TOKEN_SECRET);
 
-export { register, login };
+    let payload = { id: verify.id, role: verify.role };
+    // GET token JWT
+    const accessToken = await generateAccessToken(payload);
+    const refreshToken = await generateRefreshToken(payload);
+
+    return res.status(200).json({
+      status: true,
+      message: "REFRESH_TOKEN_SUCCES",
+      accessToken,
+      refreshToken,
+    });
+  } catch (err) {
+    // if (err.message == "jwt expired") {
+    //   err.message = "REFRESH_TOKEN_EXPIRED";
+    // } else {
+    //   err.message = "REFRESH_TOKEN_INVALID";
+    // }
+    if (!err.code) {
+      err.code = 405;
+    }
+    console.log(err);
+    return res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+export { register, login, refreshToken };
