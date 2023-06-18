@@ -13,6 +13,33 @@ const generateRefreshToken = async (payload) => {
   return jsonwebtoken.sign(payload, env.JWT_REFRESH_TOKEN_SECRET, { expiresIn: env.JWT_REFRESH_TOKEN_LIFE });
 };
 
+// Check Email :
+const isEmailExist = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    return false;
+  }
+  return true;
+};
+
+const checkEmail = async (req, res) => {
+  try {
+    const email = await isEmailExist(req.body.email);
+    if (email) {
+      throw { code: 409, message: "EMAIL_EXIST" };
+    }
+    res.status(200).json({
+      status: true,
+      message: "EMAIL_NOT_EXIST",
+    });
+  } catch (err) {
+    res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
 const register = async (req, res) => {
   try {
     // to check that the Body is not empty
@@ -39,7 +66,7 @@ const register = async (req, res) => {
       };
     }
     // check email exist
-    const email = await User.findOne({ email: req.body.email });
+    const email = await isEmailExist(req.body.email);
     if (email) {
       throw {
         code: 409,
@@ -99,7 +126,7 @@ const login = async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
       throw {
-        code: 404,
+        code: 403,
         message: "USER_NOT_FOUND",
       };
     }
@@ -107,8 +134,8 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compareSync(req.body.password, user.password);
     if (!isMatch) {
       throw {
-        code: 409,
-        message: "PASSWORD_WRONG",
+        code: 403,
+        message: "WRONG_PASSWORD",
       };
     }
     // Generate TOken
@@ -177,4 +204,4 @@ const refreshToken = async (req, res) => {
   }
 };
 
-export { register, login, refreshToken };
+export { register, login, refreshToken, checkEmail };
