@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const Schema = mongoose.Schema(
   {
@@ -9,7 +10,7 @@ const Schema = mongoose.Schema(
       type: String,
     },
     phoneNumber: {
-      type: Number,
+      type: String,
     },
     addres: {
       type: String,
@@ -38,5 +39,6 @@ const Schema = mongoose.Schema(
     timestamps: { currentTime: () => Math.floor(Date.now() / 1000) },
   }
 );
+Schema.plugin(mongoosePaginate);
 
 export default mongoose.model("User", Schema);

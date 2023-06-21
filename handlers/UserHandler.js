@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 import dotenv from "dotenv";
+import { isEmailExist } from "../libraries/isEmailExist.js";
 
 const env = dotenv.config().parsed;
 
@@ -14,13 +15,6 @@ const generateRefreshToken = async (payload) => {
 };
 
 // Check Email :
-const isEmailExist = async (email) => {
-  const user = await User.findOne({ email });
-  if (!user) {
-    return false;
-  }
-  return true;
-};
 
 const checkEmail = async (req, res) => {
   try {
@@ -152,6 +146,7 @@ const login = async (req, res) => {
         fullname: user.fullname,
         email: user.email,
       },
+      fullname: user.fullname,
       accessToken,
       refreshToken,
     });

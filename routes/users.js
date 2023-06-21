@@ -1,9 +1,12 @@
-var express = require('express');
-var router = express.Router();
+import express from "express";
+import { getUsersHandler, addUserHandler, updateUserHandler, getUserById, deleteUserByIdHandler } from "../handlers/UsersHandler.js";
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+let router = express.Router();
 
-module.exports = router;
+router.get("/", getUsersHandler);
+router.post("/", addUserHandler);
+router.put("/:id", updateUserHandler);
+router.get("/:id", getUserById);
+router.delete("/:id", deleteUserByIdHandler);
+
+export default router;
