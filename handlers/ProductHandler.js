@@ -113,5 +113,135 @@ const postProductHandler = async (req, res) => {
     });
   }
 };
+const getAllProductHandlerByAdmin = async (req, res) => {
+  try {
+    let find = {
+      title: { $regex: `^${req.query.search}`, $options: "i" },
+    };
+    let options = {
+      page: req.query.page || 1,
+      limit: req.query.limit || 10,
+    };
+    const product = await Product.paginate(find, options);
+    if (!product) {
+      throw {
+        code: 404,
+        message: "GET_PRODUCTS_FAILED",
+      };
+    }
+    return res.status(200).json({
+      status: true,
+      total: product.length,
+      product,
+    });
+  } catch (err) {
+    if (!err.code) {
+      err.code = 500;
+    }
+    return res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+const updateProductHandler = async (req, res) => {
+  try {
+    // check Params ID
+    if (!req.params.id) {
+      throw {
+        code: 428,
+        message: "ID_IS_REQUIRED",
+      };
+    }
+    // to check that the Body is not empty
+    if (!req.body.title) {
+      throw { code: 428, message: "TITLE_IS_REQUIRED" };
+    }
+    if (!req.body.description) {
+      throw { code: 428, message: "DESCRIPTION_IS_REQUIRED" };
+    }
 
-export { postProductHandler, getAllProductHandler };
+    if (!req.body.price) {
+      throw { code: 428, message: "PRICE_IS_REQUIRED" };
+    }
+    let fields = {};
+    fields.title = req.body.title;
+    fields.description = req.body.description;
+    fields.price = req.body.price;
+    // UPDATE USER
+    const product = await Product.findByIdAndUpdate(req.params.id, fields, { new: true });
+
+    if (!product) {
+      throw { code: 500, message: "PRODUCT_UPDATE_FAILED" };
+    }
+    return res.status(200).json({
+      status: true,
+      message: "PRODUCT_UPDATE_SUCCESS",
+      product: product,
+    });
+  } catch (err) {
+    if (!err.code) {
+      err.code = 500;
+    }
+    return res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+const getProductById = async (req, res) => {
+  try {
+    if (!req.params.id) {
+      throw { code: 428, message: "ID_IS_REQUIRED" };
+    }
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      throw {
+        code: 404,
+        message: "PRODUCT_NOT_FOUND",
+      };
+    }
+    return res.status(200).json({
+      status: true,
+      product: product,
+    });
+  } catch (err) {
+    if (!err.code) {
+      err.code = 500;
+    }
+    console.log(err);
+    return res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+const deleteProductByIdHandler = async (req, res) => {
+  try {
+    // check Params ID
+    if (!req.params.id) {
+      throw { code: 428, message: "ID_IS_REQUIRED" };
+    }
+    // DELETE PRODUCT
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      throw { code: 500, message: "PRODUCT_DELETE_FAILED" };
+    }
+    return res.status(200).json({
+      status: true,
+      message: "PRODUCT_DELETE_SUCCESS",
+      Product: product,
+    });
+  } catch (err) {
+    if (!err.code) {
+      err.code = 500;
+    }
+    return res.status(err.code).json({
+      status: false,
+      message: err.message,
+    });
+  }
+};
+
+export { postProductHandler, getAllProductHandler, getAllProductHandlerByAdmin, updateProductHandler, getProductById, deleteProductByIdHandler };

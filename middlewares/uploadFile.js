@@ -12,7 +12,7 @@ export const TYPE_IMAGE = {
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, "../frontend-app/assets/images");
+    cb(null, "");
   },
   filename(req, file, cb) {
     const uuid = crypto.randomUUID();

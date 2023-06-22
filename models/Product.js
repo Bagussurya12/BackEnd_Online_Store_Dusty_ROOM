@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const Schema = mongoose.Schema(
   {
@@ -38,5 +39,6 @@ Schema.virtual("categories", {
   localField: "categoryId",
   foreignField: "_id",
 });
+Schema.plugin(mongoosePaginate);
 
 export default mongoose.model("Product", Schema);

@@ -12,17 +12,17 @@ const getUsersHandler = async (req, res) => {
       page: req.query.page || 1,
       limit: req.query.limit || 10,
     };
-    const Users = await User.paginate(find, options);
-    if (!Users) {
+    const users = await User.paginate(find, options);
+    if (!users) {
       throw {
-        code: 404,
+        code: 505,
         message: "GET_USERS_FAILED",
       };
     }
     return res.status(200).json({
       status: true,
-      total: Users.length,
-      Users,
+      total: users.length,
+      users,
     });
   } catch (err) {
     if (!err.code) {
